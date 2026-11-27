@@ -5,9 +5,8 @@ Authors: Qianli Ma
 -/
 module
 
+public import Physlib.QuantumMechanics.HilbertSpaces.Qubit.Basic
 public import PhyslibAlpha.ProbabilisticTheory.HilbertSpace.OrthonormalMeasurement
-public import QuantumInfo.States.Pure.Braket
-public import QuantumInfo.States.Pure.Qubit
 
 /-!
 # Computational-basis measurement of a qubit
@@ -16,9 +15,9 @@ A measurement on a qubit with outcomes indexed by its computational basis.
 
 ## i. Overview
 
-The two coordinate vectors form an orthonormal basis of the qubit's Hilbert space.
-On a normalized ket, the probability of either outcome is the squared norm of the
-corresponding amplitude. Since the amplitudes have total squared norm one, the
+The outcomes index the standard orthonormal basis `QuantumMechanics.Qubit.basis` of the
+qubit's Hilbert space. On a normalized state vector, each outcome has probability equal to
+the squared norm of the corresponding coordinate. The basis spans the whole space, so the
 remainder in the orthonormal-family measurement vanishes.
 
 ## ii. Key results
@@ -42,19 +41,26 @@ remainder in the orthonormal-family measurement vanishes.
 namespace PhyslibAlpha.Qubit
 
 open PhyslibAlpha.ProbabilisticTheory UnitalPositiveLinearMap
+open scoped InnerProductSpace
 
 /-- The computational-basis measurement with outcomes `0` and `1`. -/
 def computationalBasisMeasurement :
-    Measurement Qubit (Observable (EuclideanSpace ℂ Qubit →L[ℂ] EuclideanSpace ℂ Qubit)) :=
-  Measurement.ofOrthonormal (EuclideanSpace.basisFun Qubit ℂ).orthonormal 0
+    Measurement (Fin 2) (Observable (QuantumMechanics.Qubit →L[ℂ] QuantumMechanics.Qubit)) :=
+  Measurement.ofOrthonormal QuantumMechanics.Qubit.basis.orthonormal 0
+
+private lemma inner_basis_eq_coordinate (ψ : QuantumMechanics.Qubit) (i : Fin 2) :
+    ⟪QuantumMechanics.Qubit.basis i, ψ⟫_ℂ = ψ.val i := by
+  rw [QuantumMechanics.Qubit.basis_apply, QuantumMechanics.FiniteHilbertSpace.inner_eq_val,
+    ← EuclideanSpace.basisFun_apply]
+  simp only [EuclideanSpace.basisFun_inner]
 
 /-- In a pure state, the probability of outcome `i` is the squared norm of its amplitude. -/
-lemma expectation_computationalBasisMeasurement_singleton (ψ : Ket Qubit) (i : Qubit) :
-    (ofVec ψ.norm_toEuclideanSpace)⟨computationalBasisMeasurement {i}
-      (measurableSet_singleton i)⟩ = ‖ψ i‖ ^ 2 := by
+lemma expectation_computationalBasisMeasurement_singleton (ψ : QuantumMechanics.Qubit)
+    (hψ : ‖ψ‖ = 1) (i : Fin 2) :
+    (ofVec hψ)⟨computationalBasisMeasurement {i}
+      (measurableSet_singleton i)⟩ = ‖ψ.val i‖ ^ 2 := by
   rw [computationalBasisMeasurement, Measurement.expectation_ofOrthonormal_singleton]
-  simp only [EuclideanSpace.basisFun_inner]
-  change ‖ψ i‖ ^ 2 + (if i = 0 then 1 - ∑ j, ‖ψ.vec j‖ ^ 2 else 0) = ‖ψ i‖ ^ 2
-  simp [ψ.normalized']
+  rw [QuantumMechanics.Qubit.basis.sum_sq_norm_inner_right, hψ, inner_basis_eq_coordinate]
+  simp
 
 end PhyslibAlpha.Qubit

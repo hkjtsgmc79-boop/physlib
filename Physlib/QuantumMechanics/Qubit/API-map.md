@@ -56,8 +56,8 @@ by two complex matrices. [TODO]
 
 ### Measurement and distinguishability
 
-Measuring a qubit in the computational basis gives the two outcomes with probabilities, by the Born
-rule, equal to the squared norms of the components of a pure state. [11] The fidelity of two
+For a normalized qubit state vector, the Born rule gives the probability of each computational-basis
+outcome as the squared norm of the corresponding coordinate. [11] The fidelity of two
 states of a qubit has a closed form in terms of their traces and determinants. [TODO]
 
 ### Pairs and registers of qubits
